@@ -28,9 +28,12 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.vfs2.FileObject;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.compress.CompressionOutputStream;
@@ -639,6 +642,11 @@ public class TextFileOutput extends BaseStep implements StepInterface {
       throw new KettleStepException( e );
     }
   }
+
+  private static String escapeCRLF(String src) {
+	  return PATTERN_LF.matcher(PATTERN_CR.matcher(src).replaceAll("\\r")).replaceAll("\\n");
+  }
+  
 
   private void writeField( ValueMetaInterface v, Object valueData, byte[] nullString ) throws KettleStepException {
     try {
