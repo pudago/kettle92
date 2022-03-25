@@ -139,7 +139,7 @@ public class CarteSingleton {
     //
     if ( objectTimeout > 0 ) {
 
-      log.logBasic( "Installing timer to purge stale objects after " + objectTimeout + " minutes." );
+      log.logDebug( "Installing timer to purge stale objects after " + objectTimeout + " minutes." );
 
       Timer timer = new Timer( "CartePurgeTimer", true );
 

@@ -159,13 +159,17 @@ public class TransLogTable extends BaseLogTable implements Cloneable, LogTableIn
   public void loadFromRepository( RepositoryAttributeInterface attributeInterface ) throws KettleException {
     super.loadFromRepository( attributeInterface );
 
-    Map<String, String> transAttrs = attributeInterface.getAttributesOnce();
-    logInterval = transAttrs.get( getLogTableCode() + PROP_LOG_TABLE_INTERVAL );
-    logSizeLimit = transAttrs.get( getLogTableCode() + PROP_LOG_TABLE_SIZE_LIMIT );
+    // Map<String, String> transAttrs = attributeInterface.getAttributesOnce();
+    // logInterval = transAttrs.get( getLogTableCode() + PROP_LOG_TABLE_INTERVAL );
+    // logSizeLimit = transAttrs.get( getLogTableCode() + PROP_LOG_TABLE_SIZE_LIMIT );
+
+    logInterval = codeStrMap.get( getLogTableCode() + PROP_LOG_TABLE_INTERVAL );
+    logSizeLimit = codeStrMap.get( getLogTableCode() + PROP_LOG_TABLE_SIZE_LIMIT );
 
 
     for ( int i = 0; i < getFields().size(); i++ ) {
-      String id = transAttrs.get( getLogTableCode() + PROP_LOG_TABLE_FIELD_ID + i );
+      // String id = transAttrs.get( getLogTableCode() + PROP_LOG_TABLE_FIELD_ID + i );
+      String id = codeStrMap.get( getLogTableCode() + PROP_LOG_TABLE_FIELD_ID + i );
       // Only read further if the ID is available.
       // For backward compatibility, this might not be provided yet!
       //

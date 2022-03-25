@@ -127,7 +127,8 @@ public class PerformanceLogTable extends BaseLogTable implements Cloneable, LogT
   public void loadFromRepository( RepositoryAttributeInterface attributeInterface ) throws KettleException {
     super.loadFromRepository( attributeInterface );
 
-    logInterval = attributeInterface.getAttributeString( getLogTableCode() + PROP_LOG_TABLE_INTERVAL );
+    // logInterval = attributeInterface.getAttributeString( getLogTableCode() + PROP_LOG_TABLE_INTERVAL );
+    logInterval = codeStrMap.get( getLogTableCode() + PROP_LOG_TABLE_INTERVAL );
   }
 
   @Override

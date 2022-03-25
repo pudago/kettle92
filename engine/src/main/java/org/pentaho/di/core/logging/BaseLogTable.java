@@ -72,6 +72,8 @@ public abstract class BaseLogTable {
 
   protected List<LogTableField> fields;
 
+  protected Map<String, String> codeStrMap;
+
   public BaseLogTable( VariableSpace space, HasDatabasesInterface databasesInterface, String connectionName,
     String schemaName, String tableName ) {
     this.space = space;
@@ -143,7 +145,7 @@ public abstract class BaseLogTable {
 
   public void loadFromRepository( RepositoryAttributeInterface attributeInterface ) throws KettleException {
     connectionName = schemaName = tableName = null;
-    Map<String, String> codeStrMap = attributeInterface.getAttributesOnce();
+    codeStrMap = attributeInterface.getAttributesOnce();
 	  String connectionNameFromRepository =
 			  codeStrMap.get( getLogTableCode() + PROP_LOG_TABLE_CONNECTION_NAME );
     
