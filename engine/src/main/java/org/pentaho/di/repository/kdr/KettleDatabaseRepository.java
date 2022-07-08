@@ -1669,7 +1669,16 @@ public class KettleDatabaseRepository extends KettleDatabaseRepositoryBase {
 
   public List<DatabaseMeta> loadDatabaseMetaList( ) throws KettleException {
     return databaseDelegate.loadDatabaseMetaList( );
-}
+  }
+
+  public List<DatabaseMeta> loadJobDatabaseMetaList( ObjectId idJob) throws KettleException {
+    return databaseDelegate.loadJobDatabaseMetaList( idJob);
+  }
+
+  public List<DatabaseMeta> loadTransDatabaseMetaList( ObjectId idTrans ) throws KettleException {
+    return databaseDelegate.loadTransDatabaseMetaList( idTrans );
+  }
+
 
   /**
    * Read all the databases defined in the repository

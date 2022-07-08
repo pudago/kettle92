@@ -22,20 +22,17 @@
 
 package org.pentaho.di.core.logging;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.pentaho.di.core.Const;
-import org.pentaho.di.core.util.Utils;
-
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import org.pentaho.di.core.Const;
+
 
 /**
  * This class keeps the last N lines in a buffer
@@ -43,310 +40,217 @@ import java.util.stream.Stream;
  * @author matt
  */
 public class LoggingBuffer {
-  private String name;
+	private String name;
 
-  private List<BufferLine> buffer;
-  private ReadWriteLock lock = new ReentrantReadWriteLock();
+	private Map<String, List<BufferLine>> buffer;
 
-  private int bufferSize;
+	// private ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private KettleLogLayout layout;
+	private int bufferSize;
 
-  private List<KettleLoggingEventListener> eventListeners;
+	private KettleLogLayout layout;
 
-  private LoggingRegistry loggingRegistry = LoggingRegistry.getInstance();
+	private List<KettleLoggingEventListener> eventListeners;
 
-  public LoggingBuffer( int bufferSize ) {
-    this.bufferSize = bufferSize;
-    // The buffer overflow protection allows it to be overflowed for 1 item within a single thread.
-    // Considering a possible high contention, let's set it's max overflow size to be 10%.
-    // Anyway, even an overflow goes higher than 10%, it wouldn't cost us too much.
-    buffer = new ArrayList<>( (int) ( bufferSize * 1.1 ) );
-    layout = new KettleLogLayout( true );
-    eventListeners = new CopyOnWriteArrayList<>();
-  }
+	private LoggingRegistry loggingRegistry = LoggingRegistry.getInstance();
 
-  /**
-   * @return the number (sequence, 1..N) of the last log line. If no records are present in the buffer, 0 is returned.
-   */
-  public int getLastBufferLineNr() {
-    lock.readLock().lock();
-    try {
-      if ( buffer.size() > 0 ) {
-        return buffer.get( buffer.size() - 1 ).getNr();
-      } else {
-        return 0;
-      }
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
+	public LoggingBuffer(int bufferSize) {
+		this.bufferSize = bufferSize;
+		// The buffer overflow protection allows it to be overflowed for 1 item
+		// within a single thread.
+		// Considering a possible high contention, let's set it's max overflow
+		// size to be 10%.
+		// Anyway, even an overflow goes higher than 10%, it wouldn't cost us
+		// too much.
+		buffer = new ConcurrentHashMap<String, List<BufferLine>>();
+		layout = new KettleLogLayout(true);
+		eventListeners = new CopyOnWriteArrayList<>();
+	}
 
-  /**
-   * @param channelId      channel IDs to grab
-   * @param includeGeneral include general log lines
-   * @param from
-   * @param to
-   * @return
-   */
-  public List<KettleLoggingEvent> getLogBufferFromTo( List<String> channelId, boolean includeGeneral, int from,
-                                                      int to ) {
-    lock.readLock().lock();
-    try {
-      Stream<BufferLine> bufferStream = buffer.stream().filter( line -> line.getNr() > from && line.getNr() <= to );
-      if ( !Utils.isEmpty( channelId ) ) {
-        bufferStream = bufferStream.filter( line -> {
-          String logChannelId = getLogChId( line );
-          return includeGeneral ? isGeneral( logChannelId ) || channelId.contains( logChannelId ) : channelId.contains( logChannelId );
-        } );
-      }
-      return bufferStream.map( BufferLine::getEvent ).collect( Collectors.toList() );
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
+	/**
+	 * @return the number (sequence, 1..N) of the last log line. If no records
+	 *         are present in the buffer, 0 is returned.
+	 */
+	public int getLastBufferLineNr() {
+		return 0;
+	}
 
-  /**
-   * @param parentLogChannelId the parent log channel ID to grab
-   * @param includeGeneral     include general log lines
-   * @param from
-   * @param to
-   * @return
-   */
-  public List<KettleLoggingEvent> getLogBufferFromTo( String parentLogChannelId, boolean includeGeneral, int from,
-                                                      int to ) {
+	/**
+	 * @param channelId
+	 *            channel IDs to grab
+	 * @param includeGeneral
+	 *            include general log lines
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public List<KettleLoggingEvent> getLogBufferFromTo(List<String> channelId,
+			boolean includeGeneral, int from, int to) {
+		List<KettleLoggingEvent> loggingEvents = new ArrayList<KettleLoggingEvent>();
+		for (String chnl : channelId) {
+			//[2022-04-27 liqiulin] fix ConncurrentModificationException
+		    //[2022-06-28 liqiulin] fix NPE in ImmutableList.copy
+		    List<BufferLine> logList = buffer.get(chnl);
+		    if (logList != null) {
+		        List<BufferLine> lineList = new ArrayList<BufferLine>();
+		        lineList.addAll(logList);
+		        if ( lineList.size() > 0 ) {
+		            loggingEvents.addAll(lineList.stream().filter(bl -> bl != null)
+						.map(BufferLine::getEvent).collect(Collectors.toList()));
+		        }
+		    }
+		}
+		return loggingEvents.stream().sorted(Comparator.comparing(KettleLoggingEvent::getTimeStamp))
+				.collect(Collectors.toList());
+	}
 
-    // Typically, the log channel id is the one from the transformation or job running currently.
-    // However, we also want to see the details of the steps etc.
-    // So we need to look at the parents all the way up if needed...
-    //
-    List<String> childIds = loggingRegistry.getLogChannelChildren( parentLogChannelId );
+	/**
+	 * @param parentLogChannelId
+	 *            the parent log channel ID to grab
+	 * @param includeGeneral
+	 *            include general log lines
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public List<KettleLoggingEvent> getLogBufferFromTo(String parentLogChannelId,
+			boolean includeGeneral, int from, int to) {
 
-    return getLogBufferFromTo( childIds, includeGeneral, from, to );
-  }
+		// Typically, the log channel id is the one from the transformation or
+		// job running currently.
+		// However, we also want to see the details of the steps etc.
+		// So we need to look at the parents all the way up if needed...
+		//
+		List<String> childIds = loggingRegistry.getLogChannelChildren(parentLogChannelId);
 
-  public StringBuffer getBuffer( String parentLogChannelId, boolean includeGeneral, int startLineNr, int endLineNr ) {
-    StringBuilder eventBuffer = new StringBuilder( 10000 );
+		return getLogBufferFromTo(childIds, includeGeneral, from, to);
+	}
 
-    List<KettleLoggingEvent> events =
-      getLogBufferFromTo( parentLogChannelId, includeGeneral, startLineNr, endLineNr );
-    for ( KettleLoggingEvent event : events ) {
-      eventBuffer.append( layout.format( event ) ).append( Const.CR );
-    }
+	public StringBuffer getBuffer(String parentLogChannelId, boolean includeGeneral,
+			int startLineNr, int endLineNr) {
+		StringBuilder eventBuffer = new StringBuilder(10000);
 
-    return new StringBuffer( eventBuffer );
-  }
+		List<KettleLoggingEvent> events = getLogBufferFromTo(parentLogChannelId, includeGeneral,
+				startLineNr, endLineNr);
+		for (KettleLoggingEvent event : events) {
+			eventBuffer.append(layout.format(event)).append(Const.CR);
+		}
 
-  public StringBuffer getBuffer( String parentLogChannelId, boolean includeGeneral ) {
-    return getBuffer( parentLogChannelId, includeGeneral, 0 );
-  }
+		return new StringBuffer(eventBuffer);
+	}
 
-  public StringBuffer getBuffer( String parentLogChannelId, boolean includeGeneral, int startLineNr ) {
-    return getBuffer( parentLogChannelId, includeGeneral, startLineNr, getLastBufferLineNr() );
-  }
+	public StringBuffer getBuffer(String parentLogChannelId, boolean includeGeneral) {
+		return getBuffer(parentLogChannelId, includeGeneral, 0);
+	}
 
-  public StringBuffer getBuffer() {
-    return getBuffer( null, true );
-  }
+	public StringBuffer getBuffer(String parentLogChannelId, boolean includeGeneral,
+			int startLineNr) {
+		return getBuffer(parentLogChannelId, includeGeneral, startLineNr, getLastBufferLineNr());
+	}
 
-  public void close() {
-  }
+	public StringBuffer getBuffer() {
+		return getBuffer(null, true);
+	}
 
-  public void doAppend( KettleLoggingEvent event ) {
-    if ( event.getMessage() instanceof LogMessage ) {
-      lock.writeLock().lock();
-      try {
-        buffer.add( new BufferLine( event ) );
-        while ( bufferSize > 0 && buffer.size() > bufferSize ) {
-          buffer.remove( 0 );
-        }
-      } finally {
-        lock.writeLock().unlock();
-      }
-    }
-  }
+	public void close() {
+	}
 
-  public void setName( String name ) {
-    this.name = name;
-  }
+	public void doAppend(KettleLoggingEvent event) {
+		if (event.getMessage() instanceof LogMessage) {
+			String chnl = getLogChId(event);
+			if (buffer.containsKey(chnl)) {
+				buffer.get(chnl).add(new BufferLine(event));
+			} else {
+				buffer.put(chnl, new ArrayList<BufferLine>(Arrays.asList(new BufferLine(event))));
+			}
+		}
+	}
 
-  public String getName() {
-    return name;
-  }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-  public void setLayout( KettleLogLayout layout ) {
-    this.layout = layout;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public KettleLogLayout getLayout() {
-    return layout;
-  }
+	public void setLayout(KettleLogLayout layout) {
+		this.layout = layout;
+	}
 
-  public boolean requiresLayout() {
-    return true;
-  }
+	public KettleLogLayout getLayout() {
+		return layout;
+	}
 
-  public void clear() {
-    lock.writeLock().lock();
-    try {
-      buffer.clear();
-    } finally {
-      lock.writeLock().unlock();
-    }
-  }
+	public boolean requiresLayout() {
+		return true;
+	}
 
-  /**
-   * @return the maximum number of lines that this buffer contains, 0 or lower means: no limit
-   */
-  public int getMaxNrLines() {
-    return bufferSize;
-  }
+	public void clear() {
+		buffer.clear();
+	}
 
-  /**
-   * @param maxNrLines the maximum number of lines that this buffer should contain, 0 or lower means: no limit
-   */
-  public void setMaxNrLines( int maxNrLines ) {
-    this.bufferSize = maxNrLines;
-  }
+	/**
+	 * @return the maximum number of lines that this buffer contains, 0 or lower
+	 *         means: no limit
+	 */
+	public int getMaxNrLines() {
+		return bufferSize;
+	}
 
-  /**
-   * @return the nrLines
-   */
-  public int getNrLines() {
-    return buffer.size();
-  }
+	/**
+	 * @param maxNrLines
+	 *            the maximum number of lines that this buffer should contain, 0
+	 *            or lower means: no limit
+	 */
+	public void setMaxNrLines(int maxNrLines) {
+		this.bufferSize = maxNrLines;
+	}
 
-  /**
-   * Removes all rows for the channel with the specified id
-   *
-   * @param id the id of the logging channel to remove
-   */
-  public void removeChannelFromBuffer( String id ) {
-    lock.writeLock().lock();
-    try {
-      buffer.removeIf( line -> id.equals( getLogChId( line ) ) );
-    } finally {
-      lock.writeLock().unlock();
-    }
-  }
+	/**
+	 * @return the nrLines
+	 */
+	public int getNrLines() {
+		return buffer.size();
+	}
 
-  public int size() {
-    return buffer.size();
-  }
+	/**
+	 * Removes all rows for the channel with the specified id
+	 *
+	 * @param id
+	 *            the id of the logging channel to remove
+	 */
+	public void removeChannelFromBuffer(String id) {
+		buffer.remove(id);
+	}
 
-  public void removeGeneralMessages() {
-    lock.writeLock().lock();
-    try {
-      buffer.removeIf( line -> isGeneral( getLogChId( line ) ) );
-    } finally {
-      lock.writeLock().unlock();
-    }
-  }
+	public void removeChannelFromBuffer(String id, boolean includeGeneral) {
+		buffer.remove(id);
+	}
 
-  /**
-   * We should not expose iterator out of the class.
-   * Looks like it's only used in tests.
-   *
-   * Marked deprecated for now.
-   * TODO: To be made package-level in future.
-   */
-  @Deprecated
-  @VisibleForTesting
-  public Iterator<BufferLine> getBufferIterator() {
-    return buffer.iterator();
-  }
+	public int size() {
+		return buffer.size();
+	}
+	
+	public Map<String, List<BufferLine>> getBufferMap(){
+		return buffer;
+	}
 
-  /**
-   * It looks like this method is not used in the project.
-   */
-  @Deprecated
-  public String dump() {
-    StringBuilder buf = new StringBuilder( 50000 );
-    lock.readLock().lock();
-    try {
-      buffer.forEach( line -> {
-        LogMessage message = (LogMessage) line.getEvent().getMessage();
-        buf.append( message.getLogChannelId() ).append( "\t" )
-                .append( message.getSubject() ).append( "\n" );
-      } );
-      return buf.toString();
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
+	public void addLogggingEvent(KettleLoggingEvent loggingEvent) {
+		doAppend(loggingEvent);
+		eventListeners.forEach(event -> event.eventAdded(loggingEvent));
+	}
 
-  /**
-   * Was used in a pair with {@link #getBufferLinesBefore(long)}.
-   *
-   * @deprecated in favor of {@link #removeBufferLinesBefore(long)}.
-   */
-  @Deprecated
-  public void removeBufferLines( List<BufferLine> linesToRemove ) {
-    lock.writeLock().lock();
-    try {
-      buffer.removeAll( linesToRemove );
-    } finally {
-      lock.writeLock().unlock();
-    }
-  }
+	public void addLoggingEventListener(KettleLoggingEventListener listener) {
+		eventListeners.add(listener);
+	}
 
-  /**
-   * Was used in a pair with {@link #removeBufferLines(List)}.
-   *
-   * @deprecated in favor of {@link #removeBufferLinesBefore(long)}.
-   */
-  @Deprecated
-  public List<BufferLine> getBufferLinesBefore( long minTimeBoundary ) {
-    lock.readLock().lock();
-    try {
-      return buffer.stream().filter( line -> line.getEvent().timeStamp < minTimeBoundary )
-        .collect( Collectors.toList() );
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
+	public void removeLoggingEventListener(KettleLoggingEventListener listener) {
+		eventListeners.remove(listener);
+	}
 
-  public void removeBufferLinesBefore( long minTimeBoundary ) {
-    // Using HashSet even though BufferLine does not implement hashcode and equals,
-    // we just need to remove the exact objects we have found and put in the set.
-    Set<BufferLine> linesToRemove = new HashSet<>();
-    lock.writeLock().lock();
-    try {
-      for ( BufferLine bufferLine : buffer ) {
-        if ( bufferLine.getEvent().timeStamp < minTimeBoundary ) {
-          linesToRemove.add( bufferLine );
-        } else {
-          break;
-        }
-      }
-      // removeAll should run fast against a HashSet,
-      // since ArrayList.batchRemove check for each element of a collection given if it is in the ArrayList.
-      // Thus, removeAll should run in a linear time.
-      buffer.removeAll( linesToRemove );
-    } finally {
-      lock.writeLock().unlock();
-    }
-  }
+	private static String getLogChId(KettleLoggingEvent event) {
+		return ((LogMessage) event.getMessage()).getLogChannelId();
+	}
 
-  public void addLogggingEvent( KettleLoggingEvent loggingEvent ) {
-    doAppend( loggingEvent );
-    eventListeners.forEach( event -> event.eventAdded( loggingEvent ) );
-  }
-
-  public void addLoggingEventListener( KettleLoggingEventListener listener ) {
-    eventListeners.add( listener );
-  }
-
-  public void removeLoggingEventListener( KettleLoggingEventListener listener ) {
-    eventListeners.remove( listener );
-  }
-
-  private boolean isGeneral( String logChannelId ) {
-    LoggingObjectInterface loggingObject = loggingRegistry.getLoggingObject( logChannelId );
-    return loggingObject != null && LoggingObjectType.GENERAL.equals( loggingObject.getObjectType() );
-  }
-
-  private static String getLogChId( BufferLine bufferLine ) {
-    return ( (LogMessage) bufferLine.getEvent().getMessage() ).getLogChannelId();
-  }
 }

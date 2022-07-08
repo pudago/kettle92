@@ -23,10 +23,8 @@
 package org.pentaho.di.core.logging;
 
 import java.io.PrintStream;
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.pentaho.di.core.Const;
@@ -65,7 +63,7 @@ public class KettleLogStore {
    */
   private KettleLogStore( int maxSize, int maxLogTimeoutMinutes, boolean redirectStdOut, boolean redirectStdErr ) {
     this.appender = new LoggingBuffer( maxSize );
-    replaceLogCleaner( maxLogTimeoutMinutes );
+    // replaceLogCleaner( maxLogTimeoutMinutes );
 
     if ( redirectStdOut ) {
       System.setOut( new LoggingPrintStream( OriginalSystemOut ) );
@@ -76,6 +74,7 @@ public class KettleLogStore {
     }
   }
 
+  /*
   public void replaceLogCleaner( final int maxLogTimeoutMinutes ) {
     if ( logCleanerTimer != null ) {
       logCleanerTimer.cancel();
@@ -100,6 +99,7 @@ public class KettleLogStore {
     logCleanerTimer.schedule( timerTask, 10000, 10000 );
 
   }
+  
 
   /**
    * Initialize the central log store with optional limitation to the size and redirect of stdout and stderr
@@ -168,7 +168,7 @@ public class KettleLogStore {
     if ( store != null ) {
       // CentralLogStore already initialized. Just update the values.
       store.appender.setMaxNrLines( maxSize );
-      store.replaceLogCleaner( maxLogTimeoutMinutes );
+      // store.replaceLogCleaner( maxLogTimeoutMinutes );
     } else {
       store = new KettleLogStore( maxSize, maxLogTimeoutMinutes, redirectStdOut, redirectStdErr );
     }
@@ -246,7 +246,7 @@ public class KettleLogStore {
 
     for ( String id : ids ) {
       // Remove it from the central log buffer
-      bufferAppender.removeChannelFromBuffer( id );
+      bufferAppender.removeChannelFromBuffer( id, includeGeneralMessages );
 
       // Also remove the item from the registry.
       metricsRegistry.getSnapshotLists().remove( id );
@@ -256,9 +256,9 @@ public class KettleLogStore {
     registry.removeIncludingChildren( parentLogChannelId );
 
     // Now discard the general lines if this is required
-    if ( includeGeneralMessages ) {
-      bufferAppender.removeGeneralMessages();
-    }
+    // if ( includeGeneralMessages ) {
+    //   bufferAppender.removeGeneralMessages();
+    // }
   }
 
   public static boolean isInitialized() {

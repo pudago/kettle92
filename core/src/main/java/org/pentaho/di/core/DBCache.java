@@ -29,11 +29,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.SocketTimeoutException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.pentaho.di.core.exception.KettleEOFException;
 import org.pentaho.di.core.exception.KettleFileException;
 import org.pentaho.di.core.logging.LogChannel;
@@ -41,6 +39,10 @@ import org.pentaho.di.core.logging.LogChannelInterface;
 import org.pentaho.di.core.row.RowMeta;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.version.BuildVersion;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * This class caches database queries so that the same query doesn't get called twice. Queries are often launched to the
@@ -54,7 +56,7 @@ public class DBCache {
   @VisibleForTesting
   static DBCache dbCache;
 
-  private Map<DBCacheEntry, RowMetaInterface> cache;
+  private Cache<DBCacheEntry, RowMetaInterface> cache;
   private boolean useCache;
 
   private LogChannelInterface log;
@@ -99,7 +101,7 @@ public class DBCache {
       return null;
     }
 
-    RowMetaInterface fields = cache.get( entry );
+    RowMetaInterface fields = cache.getIfPresent( entry );
     if ( fields != null ) {
       fields = fields.clone(); // Copy it again!
     }
@@ -107,7 +109,7 @@ public class DBCache {
     return fields;
   }
 
-  public int size() {
+  public long size() {
     return cache.size();
   }
 
@@ -119,14 +121,17 @@ public class DBCache {
    */
   public void clear( String dbname ) {
     if ( dbname == null ) {
-      cache = new ConcurrentHashMap<>();
+      if ( cache == null ) {
+          cache = CacheBuilder.newBuilder()
+              .maximumSize(500)
+              .build();
+      } else {
+          cache.invalidateAll();
+      }
+      // setInactive();//[2022-06-15 liqiuin, change to Inactive]
       setActive();
     } else {
-      for ( DBCacheEntry entry : cache.keySet() ) {
-        if ( entry.sameDB( dbname ) ) {
-          cache.remove( entry );
-        }
-      }
+        cache.invalidateAll(cache.asMap().keySet().stream().filter(e -> e.sameDB(dbname)).collect(Collectors.toList()));
     }
   }
 
@@ -188,7 +193,7 @@ public class DBCache {
 
           int counter = 0;
 
-          for ( DBCacheEntry entry : cache.keySet() ) {
+          for ( DBCacheEntry entry : cache.asMap().keySet() ) {
             entry.write( dos );
 
             // Save the corresponding row as well.

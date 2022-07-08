@@ -77,7 +77,7 @@ public class OracleDatabaseMetaTest {
     assertEquals( -1, odbcMeta.getDefaultDatabasePort() );
     assertFalse( nativeMeta.supportsAutoInc() );
     assertFalse( nativeMeta.needsToLockAllTables() );
-    assertEquals( "oracle.jdbc.driver.OracleDriver", nativeMeta.getDriverClass() );
+    assertEquals( "oracle.jdbc.OracleDriver", nativeMeta.getDriverClass() );
     assertEquals( "sun.jdbc.odbc.JdbcOdbcDriver", odbcMeta.getDriverClass() );
     assertEquals( "jdbc:odbc:FOO", odbcMeta.getURL( null, null, "FOO" ) );
     assertEquals( "jdbc:oracle:thin:@FOO:1024:BAR", nativeMeta.getURL( "FOO", "1024", "BAR" ) );

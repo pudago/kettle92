@@ -175,29 +175,7 @@ public class LoggingRegistryTest {
     assertNotEquals( beforeReset, loggingRegistry.getTimerHashCode() );
   }
 
-  /**
-   * Tests Purge logic in the happy path, no fileWritersBuffer in play.
-   */
-  @Test
-  public void testSimplePurge() {
-    LoggingRegistry loggingRegistry = LoggingRegistry.getInstance();
-    loggingRegistry.setMaxSize( 10 );
-    loggingRegistry.reset();
 
-    // Test that registry is not purged when below the map.
-    populateLoggingRegistry( 1, loggingRegistry, true, false );
-    loggingRegistry.invokePurge();
-    assertEquals( 0, loggingRegistry.getPurgedObjectCount() );
-
-    loggingRegistry.reset();
-    populateLoggingRegistry( 20, loggingRegistry, true, false );
-
-    // Test that the registry purged the expected amount 11 objects with a max size of 20.
-    loggingRegistry.invokePurge();
-    assertThat( loggingRegistry.getRegistryMapSize(), lessThan( 10 ) );
-    assertEquals( 11, loggingRegistry.getPurgedObjectCount() );
-
-  }
 
   @Test
   public void testPurgeErrorCase() {

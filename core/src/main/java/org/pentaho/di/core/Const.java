@@ -157,7 +157,7 @@ public class Const {
   /**
    * job/trans heartbeat scheduled executor periodic interval ( in seconds )
    */
-  public static final int HEARTBEAT_PERIODIC_INTERVAL_IN_SECS = 10;
+  public static final int HEARTBEAT_PERIODIC_INTERVAL_IN_SECS = 60;
 
   /**
    * What's the file systems file separator on this operating system?

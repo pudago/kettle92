@@ -22,10 +22,9 @@
 
 package org.pentaho.di.core.database.util;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.Test;
 
-import javax.sql.DataSource;
 
 import static org.junit.Assert.*;
 

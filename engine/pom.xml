@@ -122,6 +122,12 @@
       <groupId>org.pentaho</groupId>
       <artifactId>pdi-engine-api</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Pentaho dependencies -->
@@ -129,6 +135,12 @@
       <groupId>org.pentaho</groupId>
       <artifactId>pentaho-registry</artifactId>
       <version>${pentaho-registry.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>pentaho</groupId>
@@ -249,10 +261,10 @@
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.owasp.encoder</groupId>
       <artifactId>encoder</artifactId>
@@ -879,6 +891,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jaas</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -889,6 +902,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.eclipse.jetty.orbit</groupId>
@@ -899,6 +913,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-security</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -909,6 +924,18 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
+      <version>${jetty.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlets</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -919,6 +946,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -929,6 +957,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-xml</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -939,6 +968,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

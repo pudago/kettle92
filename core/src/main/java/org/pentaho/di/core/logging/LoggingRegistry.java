@@ -230,10 +230,6 @@ public class LoggingRegistry {
     return this.map.get( logChannelId );
   }
 
-  /**
-   * @deprecated This is unsafe call and references to this method will be remove.
-   */
-  @Deprecated
   public Map<String, LoggingObjectInterface> getMap() {
     return this.map;
   }
@@ -596,7 +592,7 @@ public class LoggingRegistry {
       public void run() {
         if ( busy.compareAndSet( false, true ) ) {
           try {
-            purgeRegistry();
+            // purgeRegistry();
             purgeTimerCount++;
 
           } finally {
@@ -678,7 +674,7 @@ public class LoggingRegistry {
    */
   @VisibleForTesting
   void invokePurge( ) {
-    purgeRegistry();
+    // purgeRegistry();
   }
 
   /**

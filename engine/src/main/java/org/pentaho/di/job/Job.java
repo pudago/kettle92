@@ -1298,6 +1298,12 @@ public class Job extends Thread implements VariableSpace, NamedParams, HasLogCha
     setStopped( true );
   }
 
+  //[2022-04-27 liqiulin force stop if timeout ]
+  public void stopAllWhenTimeout() {
+	  setStopped( true );
+    log.logError("running timeout!");
+  }
+
   /** Sets the stopped. */
   public void setStopped( boolean stopped ) {
     status.updateAndGet( v -> stopped ? v | BitMaskStatus.STOPPED.mask : ( BitMaskStatus.BIT_STATUS_SUM
@@ -2285,7 +2291,7 @@ public class Job extends Thread implements VariableSpace, NamedParams, HasLogCha
       public void run() {
 
         if ( Job.this.isFinished() ) {
-          log.logBasic( "Shutting down heartbeat signal for " + jobMeta.getName() );
+          log.logDebug( "Shutting down heartbeat signal for " + jobMeta.getName() );
           shutdownHeartbeat( heartbeat );
           return;
         }

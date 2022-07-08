@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.pentaho.di.core.Const;
-import org.pentaho.di.core.util.Utils;
 import org.pentaho.di.version.BuildVersion;
 
 public class KettleLogLayout {

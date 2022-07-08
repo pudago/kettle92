@@ -36,30 +36,7 @@ public class LoggingBufferConcurrencyTest {
 
   private LoggingBuffer buffer;
 
-  @Test
-  public void shouldNotFailProcessingEventsUnderHighContention() throws Exception {
-    int modifiersAmount = 100;
-    int readersAmount = 100;
-
-    buffer = new LoggingBuffer( 5000 );
-
-    AtomicBoolean condition = new AtomicBoolean( true );
-
-    List<StopOnErrorCallable<?>> modifiers = new ArrayList<>();
-    for ( int i = 0; i < modifiersAmount; i++ ) {
-      modifiers.add( new Appender( condition ) );
-    }
-    List<StopOnErrorCallable<?>> readers = new ArrayList<>();
-    for ( int i = 0; i < readersAmount; i++ ) {
-      readers.add( new Reader( condition ) );
-    }
-
-    ConcurrencyTestRunner<?, ?> runner =
-      new ConcurrencyTestRunner<>( modifiers, readers, condition, 5000 );
-    runner.runConcurrentTest();
-    runner.checkNoExceptionRaised();
-  }
-
+  
   private class Appender extends StopOnErrorCallable<Void> {
     Appender( AtomicBoolean condition ) {
       super( condition );

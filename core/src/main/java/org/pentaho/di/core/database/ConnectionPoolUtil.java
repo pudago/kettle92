@@ -302,9 +302,7 @@ public class ConnectionPoolUtil {
    */
   private static void addPoolableDataSource( LogChannelInterface log, DatabaseMeta databaseMeta, String partitionId,
       int initialSize, int maximumSize ) throws KettleDatabaseException {
-    if ( log.isBasic() ) {
-      log.logBasic( BaseMessages.getString( PKG, "Database.CreatingConnectionPool", databaseMeta.getName() ) );
-    }
+      log.logDetailed( BaseMessages.getString( PKG, "Database.CreatingConnectionPool", databaseMeta.getName() ) );
 
     BasicDataSource ds = new BasicDataSource();
     configureDataSource( ds, databaseMeta, partitionId, initialSize, maximumSize );
@@ -313,9 +311,7 @@ public class ConnectionPoolUtil {
     // register data source
     dataSources.put( getDataSourceName( databaseMeta, partitionId ), ds );
 
-    if ( log.isBasic() ) {
-      log.logBasic( BaseMessages.getString( PKG, "Database.CreatedConnectionPool", databaseMeta.getName() ) );
-    }
+    log.logDetailed( BaseMessages.getString( PKG, "Database.CreatedConnectionPool", databaseMeta.getName() ) );
   }
 
   protected static String buildPoolName( DatabaseMeta dbMeta, String partitionId ) {

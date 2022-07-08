@@ -2238,6 +2238,21 @@ public class KettleDatabaseRepositoryConnectionDelegate extends KettleDatabaseRe
     return callRead( () -> database.getRows( sql, limit ) );
   }
 
+  public List<Object[]> getRows(String sql, RowMetaInterface params, Object[] data, int limit) 
+	        throws KettleDatabaseException {
+        try {
+            if (!database.getConnection().isValid(6)) {
+                sqlMap.clear();
+                database.connect();
+            }
+        } catch (SQLException e) {
+            throw new KettleDatabaseException(e);
+        }
+        return callRead(() -> database.getRows(sql, params, data, ResultSet.FETCH_FORWARD, false, limit, null ));
+    }
+	
+
+
   public RowMetaInterface getReturnRowMeta() throws KettleDatabaseException {
     return database.getReturnRowMeta();
   }

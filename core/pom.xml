@@ -49,6 +49,7 @@
     <!-- liqiulin -->
     <slf4j.version>1.7.30</slf4j.version>
     <jetty.version>9.4.41.v20210516</jetty.version>
+    <guava.version>30.1-jre</guava.version>
 
   </properties>
 
@@ -58,6 +59,12 @@
     <dependency>
       <groupId>pentaho</groupId>
       <artifactId>metastore</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Third-party dependencies -->
@@ -80,6 +87,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>org.owasp.encoder</groupId>
@@ -297,6 +305,12 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -305,6 +319,12 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-vfs2</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -378,6 +398,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
+      <version>${jetty.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -482,6 +503,12 @@
       <groupId>pentaho</groupId>
       <artifactId>simple-jndi</artifactId>
       <version>${simple-jndi.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- region - Needed for runtime execution -->
@@ -538,6 +565,12 @@
       <groupId>org.pentaho</groupId>
       <artifactId>pentaho-encryption-support</artifactId>
       <version>${encryption-support.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
   </dependencies>

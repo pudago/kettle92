@@ -762,9 +762,9 @@ public List<JobHopMeta> loadJobHopMetaList( ObjectId id_job, List<JobEntryCopy> 
    *          set to true if you want to overwrite shared connections while loading.
    * @throws KettleException
    */
-  public synchronized void readDatabases( JobMeta jobMeta, boolean overWriteShared ) throws KettleException {
+  public void readDatabases( JobMeta jobMeta, boolean overWriteShared ) throws KettleException {
     try {
-      for (DatabaseMeta databaseMeta : repository.loadDatabaseMetaList()) {
+      for (DatabaseMeta databaseMeta : repository.loadJobDatabaseMetaList(jobMeta.getObjectId())) {
     		databaseMeta.shareVariablesWith( jobMeta );
     		DatabaseMeta check = jobMeta.findDatabase( databaseMeta.getName() );
     		if ( check == null || overWriteShared ) {

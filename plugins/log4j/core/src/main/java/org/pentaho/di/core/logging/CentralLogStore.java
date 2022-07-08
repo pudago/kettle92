@@ -44,9 +44,9 @@ public class CentralLogStore {
     KettleLogStore.init( maxSize, maxLogTimeoutMinutes );
   }
 
-  public void replaceLogCleaner( final int maxLogTimeoutMinutes ) {
-    KettleLogStore.getInstance().replaceLogCleaner( maxLogTimeoutMinutes );
-  }
+  // public void replaceLogCleaner( final int maxLogTimeoutMinutes ) {
+  //   KettleLogStore.getInstance().replaceLogCleaner( maxLogTimeoutMinutes );
+  // }
 
   /**
    * Initialize the central log store with optional limitation to the size

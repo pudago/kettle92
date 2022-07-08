@@ -22,7 +22,18 @@
 
 package org.pentaho.di.www;
 
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.Servlet;
+
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -42,14 +53,15 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.HeaderFilter;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.pentaho.di.cluster.SlaveServer;
 import org.pentaho.di.core.Const;
-import org.pentaho.di.core.util.Utils;
 import org.pentaho.di.core.KettleEnvironment;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.extension.ExtensionPointHandler;
@@ -58,16 +70,10 @@ import org.pentaho.di.core.logging.LogChannelInterface;
 import org.pentaho.di.core.plugins.CartePluginType;
 import org.pentaho.di.core.plugins.PluginInterface;
 import org.pentaho.di.core.plugins.PluginRegistry;
+import org.pentaho.di.core.util.Utils;
 import org.pentaho.di.i18n.BaseMessages;
 
-import javax.servlet.Servlet;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 public class WebServer {
 
@@ -211,24 +217,38 @@ public class WebServer {
     constraint.setRoles( roles.toArray( new String[ 0 ] ) );
     constraint.setAuthenticate( true );
 
+
+    /* 
     ConstraintMapping constraintMapping = new ConstraintMapping();
     constraintMapping.setConstraint( constraint );
     constraintMapping.setPathSpec( "/*" );
-
     securityHandler.setConstraintMappings( new ConstraintMapping[] { constraintMapping } );
+    */
+
+    FilterHolder holderNosniff = new FilterHolder(new HeaderFilter());
+    holderNosniff.setInitParameter("headerConfig",  "set X-Content-Type-Options: nosniff");
+    
+    FilterHolder holderXdeny = new FilterHolder(new HeaderFilter());
+    holderXdeny.setInitParameter("headerConfig",  "set X-Frame-Options: DENY");
+    
+    FilterHolder holderXss = new FilterHolder(new HeaderFilter());
+    holderXss.setInitParameter("headerConfig",  "set X-XSS-Protection: 1; mode=block");
+    
+    List<ConstraintMapping> cms = new ArrayList<ConstraintMapping>();
 
     // Add all the servlets defined in kettle-servlets.xml ...
     //
     ContextHandlerCollection contexts = new ContextHandlerCollection();
 
     // Root
-    //
+    /*
     ServletContextHandler
         root =
         new ServletContextHandler( contexts, GetRootServlet.CONTEXT_PATH, ServletContextHandler.SESSIONS );
     GetRootServlet rootServlet = new GetRootServlet();
     rootServlet.setJettyMode( true );
     root.addServlet( new ServletHolder( rootServlet ), "/*" );
+    */
 
     PluginRegistry pluginRegistry = PluginRegistry.getInstance();
     List<PluginInterface> plugins = pluginRegistry.getPlugins( CartePluginType.class );
@@ -242,8 +262,26 @@ public class WebServer {
         new ServletContextHandler( contexts, getContextPath( servlet ), ServletContextHandler.SESSIONS );
       ServletHolder servletHolder = new ServletHolder( (Servlet) servlet );
       servletContext.addServlet( servletHolder, "/*" );
+
+      ConstraintMapping cm = new ConstraintMapping();
+      cm.setConstraint( constraint );
+      cm.setPathSpec( getContextPath( servlet ) + "/*" );// avod skip auth
+      cms.add(cm);
+      
+      servletContext.addFilter(holderNosniff, "*", EnumSet.of(DispatcherType.REQUEST));
+      servletContext.addFilter(holderNosniff, "/*", EnumSet.of(DispatcherType.REQUEST));
+      
+      servletContext.addFilter(holderXdeny, "*", EnumSet.of(DispatcherType.REQUEST));
+      servletContext.addFilter(holderXdeny, "/*", EnumSet.of(DispatcherType.REQUEST));
+      
+      servletContext.addFilter(holderXss, "*", EnumSet.of(DispatcherType.REQUEST));
+      servletContext.addFilter(holderXss, "/*", EnumSet.of(DispatcherType.REQUEST));
+    }
+    if (cms.size() > 0 ) {
+      securityHandler.setConstraintMappings( cms.toArray(new ConstraintMapping[0]) );
     }
 
+    /*
     // setup jersey (REST)
     ServletHolder jerseyServletHolder = new ServletHolder( ServletContainer.class );
     jerseyServletHolder.setInitParameter( "com.sun.jersey.config.property.resourceConfigClass",
@@ -276,7 +314,7 @@ public class WebServer {
     HandlerList handlers = new HandlerList();
     handlers.setHandlers( new Handler[] { resourceHandler, contexts } );
     securityHandler.setHandler( handlers );
-
+     */
     server.setHandler( securityHandler );
 
     // Start execution

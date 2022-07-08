@@ -108,7 +108,7 @@ public class OracleDatabaseMeta extends BaseDatabaseMeta {
     if ( getAccessType() == DatabaseMeta.TYPE_ACCESS_ODBC ) {
       return "sun.jdbc.odbc.JdbcOdbcDriver";
     } else {
-      return "oracle.jdbc.driver.OracleDriver";
+      return "oracle.jdbc.OracleDriver";
     }
   }
 

@@ -108,6 +108,53 @@ public class KettleDatabaseRepositoryDatabaseDelegate extends KettleDatabaseRepo
     return attrs;
   }
 
+  public Collection<RowMetaAndData> getJobDatabaseAttributes(ObjectId idJob) throws KettleDatabaseException, KettleValueException {
+    List<RowMetaAndData> attrs = new ArrayList<RowMetaAndData>();
+    RowMetaInterface parameterMeta = new RowMeta();
+    parameterMeta.addValueMeta( new ValueMetaInteger( "id_job" ) );
+    Object[] parameterData = new Object[] { ( (LongObjectId) idJob ).longValue(), };
+    List<Object[]> rows =
+      repository.connectionDelegate.getRows( "SELECT * FROM "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE_ATTRIBUTE )
+        + " WHERE ID_DATABASE IN ("
+        + " SELECT ID_DATABASE FROM R_JOBENTRY_DATABASE "
+        + " WHERE ID_JOB = ?)", parameterMeta,parameterData, 0 );
+    for ( Object[] row : rows ) {
+      RowMetaAndData rowWithMeta = new RowMetaAndData( repository.connectionDelegate.getReturnRowMeta(), row );
+      long id =
+        rowWithMeta.getInteger(
+          quote( KettleDatabaseRepository.FIELD_DATABASE_ATTRIBUTE_ID_DATABASE_ATTRIBUTE ), 0 );
+      if ( id > 0 ) {
+        attrs.add( rowWithMeta );
+      }
+    }
+    return attrs;
+  }
+
+  public Collection<RowMetaAndData> getTransDatabaseAttributes(ObjectId idTrans) throws KettleDatabaseException, KettleValueException {
+    List<RowMetaAndData> attrs = new ArrayList<RowMetaAndData>();
+    RowMetaInterface parameterMeta = new RowMeta();
+    parameterMeta.addValueMeta( new ValueMetaInteger( "id_transformation" ) );
+    Object[] parameterData = new Object[] { ( (LongObjectId) idTrans ).longValue(), };
+    List<Object[]> rows =
+      repository.connectionDelegate.getRows( "SELECT * FROM "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE_ATTRIBUTE )
+        + " WHERE ID_DATABASE IN ("
+                + " SELECT ID_DATABASE FROM R_STEP_DATABASE "
+                + " WHERE ID_TRANSFORMATION = ?)", parameterMeta,parameterData, 0 );
+    for ( Object[] row : rows ) {
+      RowMetaAndData rowWithMeta = new RowMetaAndData( repository.connectionDelegate.getReturnRowMeta(), row );
+      long id =
+        rowWithMeta.getInteger(
+          quote( KettleDatabaseRepository.FIELD_DATABASE_ATTRIBUTE_ID_DATABASE_ATTRIBUTE ), 0 );
+      if ( id > 0 ) {
+        attrs.add( rowWithMeta );
+      }
+    }
+    return attrs;
+  }
+
+
   /**
    *
    * Load the Database Info
@@ -181,6 +228,52 @@ public class KettleDatabaseRepositoryDatabaseDelegate extends KettleDatabaseRepo
     return dbs;
   }
 
+  public Collection<RowMetaAndData> getJobDatabaseList(ObjectId idJob) throws KettleDatabaseException, KettleValueException {
+    List<RowMetaAndData> dbs = new ArrayList<RowMetaAndData>();
+    RowMetaInterface parameterMeta = new RowMeta();
+    parameterMeta.addValueMeta( new ValueMetaInteger( "id_job" ) );
+    Object[] parameterData = new Object[] { ( (LongObjectId) idJob ).longValue(), };
+    
+    List<Object[]> rows =
+      repository.connectionDelegate.getRows( "SELECT A.*, B.CODE AS TYPE_CODE, C.CODE AS CONTYPE_CODE FROM "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE ) + " A LEFT JOIN "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE_TYPE ) 
+        + " B ON A.ID_DATABASE_TYPE = B.ID_DATABASE_TYPE LEFT JOIN "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE_CONTYPE )
+        + " C ON A.ID_DATABASE_CONTYPE = C.ID_DATABASE_CONTYPE "
+        + " WHERE A.ID_DATABASE IN  (SELECT D.ID_DATABASE FROM R_JOBENTRY_DATABASE D "
+        + "       WHERE D.ID_JOB = ?) "
+        + "  AND A.ID_DATABASE > 0", parameterMeta, parameterData, 0 );
+    for ( Object[] row : rows ) {
+      RowMetaAndData rowWithMeta = new RowMetaAndData( repository.connectionDelegate.getReturnRowMeta(), row );
+      dbs.add( rowWithMeta );
+    }
+    return dbs;
+  }
+
+  public Collection<RowMetaAndData> getTransDatabaseList(ObjectId idTrans) throws KettleDatabaseException, KettleValueException {
+    List<RowMetaAndData> dbs = new ArrayList<RowMetaAndData>();
+    RowMetaInterface parameterMeta = new RowMeta();
+    parameterMeta.addValueMeta( new ValueMetaInteger( "id_transformation" ) );
+    Object[] parameterData = new Object[] { ( (LongObjectId) idTrans ).longValue(), };
+    List<Object[]> rows =
+      repository.connectionDelegate.getRows( "SELECT A.*, B.CODE AS TYPE_CODE, C.CODE AS CONTYPE_CODE FROM "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE ) + " A LEFT JOIN "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE_TYPE ) 
+        + " B ON A.ID_DATABASE_TYPE = B.ID_DATABASE_TYPE LEFT JOIN "
+        + quoteTable( KettleDatabaseRepository.TABLE_R_DATABASE_CONTYPE )
+        + " C ON A.ID_DATABASE_CONTYPE = C.ID_DATABASE_CONTYPE "
+        + " WHERE A.ID_DATABASE IN  (SELECT D.ID_DATABASE FROM R_STEP_DATABASE D "
+        + "       WHERE D.ID_TRANSFORMATION = ?)"
+        + "  AND A.ID_DATABASE > 0", parameterMeta, parameterData, 0 );
+    for ( Object[] row : rows ) {
+      RowMetaAndData rowWithMeta = new RowMetaAndData( repository.connectionDelegate.getReturnRowMeta(), row );
+      dbs.add( rowWithMeta );
+    }
+    return dbs;
+  }
+
+
   // [2021-12-21 liqiulin]
   private Map<String, String> rows2Props(List<RowMetaAndData> rows) throws KettleValueException{
 	  Map<String, String> props = new HashMap<String, String>();
@@ -237,6 +330,101 @@ public class KettleDatabaseRepositoryDatabaseDelegate extends KettleDatabaseRepo
 	  
 	  return dbMetaList;
   }
+
+  public List<DatabaseMeta> loadJobDatabaseMetaList( ObjectId idJob ) throws KettleException {
+    List<DatabaseMeta> dbMetaList = new ArrayList<DatabaseMeta>();
+    Map<ObjectId, List<RowMetaAndData>> dbAttrMap = new ConcurrentHashMap<ObjectId, List<RowMetaAndData>>();
+    
+    Collection<RowMetaAndData> rDbs = getJobDatabaseList(idJob);
+    
+    for (RowMetaAndData r : rDbs) {
+        // init attribute map
+        dbAttrMap.put(new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ID_DATABASE)), 
+                new ArrayList<RowMetaAndData>());
+        
+        DatabaseMeta databaseMeta = new DatabaseMeta();
+        if (r.getString( "TYPE_CODE", null ) != null) {
+            databaseMeta.setDatabaseInterface( DatabaseMeta.getDatabaseInterface( r.getString( "TYPE_CODE", null ) ) );
+        }
+        databaseMeta.setAttributes( new Properties() ); // new attributes
+        databaseMeta.setObjectId( new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ID_DATABASE)) );
+        databaseMeta.setName( r.getString( KettleDatabaseRepository.FIELD_DATABASE_NAME, "" ) );
+        databaseMeta.setAccessType( DatabaseMeta.getAccessType( r.getString( "CONTYPE_CODE", null ) ) );
+        databaseMeta.setHostname( r.getString( KettleDatabaseRepository.FIELD_DATABASE_HOST_NAME, "" ) );
+        databaseMeta.setDBName( r.getString( KettleDatabaseRepository.FIELD_DATABASE_DATABASE_NAME, "" ) );
+        databaseMeta.setDBPort( r.getString( KettleDatabaseRepository.FIELD_DATABASE_PORT, "" ) );
+        databaseMeta.setUsername( r.getString( KettleDatabaseRepository.FIELD_DATABASE_USERNAME, "" ) );
+        databaseMeta.setPassword( Encr.decryptPasswordOptionallyEncrypted( r.getString(
+          KettleDatabaseRepository.FIELD_DATABASE_PASSWORD, "" ) ) );
+        databaseMeta.setServername( r.getString( KettleDatabaseRepository.FIELD_DATABASE_SERVERNAME, "" ) );
+        databaseMeta.setDataTablespace( r.getString( KettleDatabaseRepository.FIELD_DATABASE_DATA_TBS, "" ) );
+        databaseMeta.setIndexTablespace( r.getString( KettleDatabaseRepository.FIELD_DATABASE_INDEX_TBS, "" ) );
+        dbMetaList.add(databaseMeta);
+    }
+    
+    //fill database attributes
+    Collection<RowMetaAndData> rDbAttrs = getJobDatabaseAttributes(idJob);
+    for(RowMetaAndData r : rDbAttrs) {
+        if (dbAttrMap.get(new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ATTRIBUTE_ID_DATABASE))) != null) {
+            dbAttrMap.get(new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ATTRIBUTE_ID_DATABASE))).add(r);
+        }
+    }
+    
+    // database properties
+    for (DatabaseMeta db : dbMetaList) {
+        db.getAttributes().putAll(rows2Props(dbAttrMap.get(db.getObjectId())));
+    }
+    
+    return dbMetaList;
+}
+
+public List<DatabaseMeta> loadTransDatabaseMetaList( ObjectId idTrans ) throws KettleException {
+    List<DatabaseMeta> dbMetaList = new ArrayList<DatabaseMeta>();
+    Map<ObjectId, List<RowMetaAndData>> dbAttrMap = new ConcurrentHashMap<ObjectId, List<RowMetaAndData>>();
+    
+    Collection<RowMetaAndData> rDbs = getTransDatabaseList(idTrans);
+    
+    for (RowMetaAndData r : rDbs) {
+        // init attribute map
+        dbAttrMap.put(new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ID_DATABASE)), 
+                new ArrayList<RowMetaAndData>());
+        
+        DatabaseMeta databaseMeta = new DatabaseMeta();
+        if (r.getString( "TYPE_CODE", null ) != null) {
+            databaseMeta.setDatabaseInterface( DatabaseMeta.getDatabaseInterface( r.getString( "TYPE_CODE", null ) ) );
+        }
+        databaseMeta.setAttributes( new Properties() ); // new attributes
+        databaseMeta.setObjectId( new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ID_DATABASE)) );
+        databaseMeta.setName( r.getString( KettleDatabaseRepository.FIELD_DATABASE_NAME, "" ) );
+        databaseMeta.setAccessType( DatabaseMeta.getAccessType( r.getString( "CONTYPE_CODE", null ) ) );
+        databaseMeta.setHostname( r.getString( KettleDatabaseRepository.FIELD_DATABASE_HOST_NAME, "" ) );
+        databaseMeta.setDBName( r.getString( KettleDatabaseRepository.FIELD_DATABASE_DATABASE_NAME, "" ) );
+        databaseMeta.setDBPort( r.getString( KettleDatabaseRepository.FIELD_DATABASE_PORT, "" ) );
+        databaseMeta.setUsername( r.getString( KettleDatabaseRepository.FIELD_DATABASE_USERNAME, "" ) );
+        databaseMeta.setPassword( Encr.decryptPasswordOptionallyEncrypted( r.getString(
+          KettleDatabaseRepository.FIELD_DATABASE_PASSWORD, "" ) ) );
+        databaseMeta.setServername( r.getString( KettleDatabaseRepository.FIELD_DATABASE_SERVERNAME, "" ) );
+        databaseMeta.setDataTablespace( r.getString( KettleDatabaseRepository.FIELD_DATABASE_DATA_TBS, "" ) );
+        databaseMeta.setIndexTablespace( r.getString( KettleDatabaseRepository.FIELD_DATABASE_INDEX_TBS, "" ) );
+        dbMetaList.add(databaseMeta);
+    }
+    
+    //fill database attributes
+    Collection<RowMetaAndData> rDbAttrs = getTransDatabaseAttributes(idTrans);
+    for(RowMetaAndData r : rDbAttrs) {
+        if (dbAttrMap.get(new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ATTRIBUTE_ID_DATABASE))) != null) {
+            dbAttrMap.get(new LongObjectId(r.getInteger(KettleDatabaseRepository.FIELD_DATABASE_ATTRIBUTE_ID_DATABASE))).add(r);
+        }
+    }
+    
+    // database properties
+    for (DatabaseMeta db : dbMetaList) {
+        db.getAttributes().putAll(rows2Props(dbAttrMap.get(db.getObjectId())));
+    }
+    
+    return dbMetaList;
+}
+
 
   /**
    * Saves the database information into a given repository.

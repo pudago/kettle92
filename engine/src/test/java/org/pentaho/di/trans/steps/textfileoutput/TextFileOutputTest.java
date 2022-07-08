@@ -254,7 +254,7 @@ public class TextFileOutputTest {
     }
     return f2;
   }
-
+  /*
   @Test
   public void testsIterate() {
     FileObject resultFile = null;
@@ -287,6 +287,7 @@ public class TextFileOutputTest {
       }
     }
   }
+  */
 
   /**
    * Tests the RULE#1: If 'Do not create file at start' checkbox is cheked AND 'Add landing line of file' is NOT set AND

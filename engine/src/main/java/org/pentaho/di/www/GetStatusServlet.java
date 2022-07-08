@@ -558,6 +558,7 @@ public class GetStatusServlet extends BaseHttpServlet implements CartePluginInte
       //
       SlaveServerConfig serverConfig = getTransformationMap().getSlaveServerConfig();
       if ( serverConfig != null ) {
+        /*
         String maxLines = "";
         if ( serverConfig.getMaxLogLines() == 0 ) {
           maxLines = BaseMessages.getString( PKG, "GetStatusServlet.NoLimit" );
@@ -572,7 +573,7 @@ public class GetStatusServlet extends BaseHttpServlet implements CartePluginInte
             + "cellTableLastColumn\">"
             + maxLines
             + "</td> </tr>" );
-
+        */
         // The max age of log lines
         //
         String maxAge = "";

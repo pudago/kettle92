@@ -4835,7 +4835,9 @@ public class ValueMetaBase implements ValueMetaInterface {
 
             // if the length or precision needs a BIGNUMBER
             if ( length > 15 || precision > 15 ) {
-              valtype = ValueMetaInterface.TYPE_BIGNUMBER;
+              // valtype = ValueMetaInterface.TYPE_BIGNUMBER;
+              precision = -1;
+              length = -1;
             }
           } else {
             if ( precision == 0 ) {
@@ -4888,9 +4890,10 @@ public class ValueMetaBase implements ValueMetaInterface {
           break;
 
         case java.sql.Types.DATE:
-          if ( databaseMeta.getDatabaseInterface() instanceof TeradataDatabaseMeta ) {
-            precision = 1;
-          }
+          // if ( databaseMeta.getDatabaseInterface() instanceof TeradataDatabaseMeta ) {
+          //   precision = 1;
+          // }
+          precision = 1;
         case java.sql.Types.TIME:
           valtype = ValueMetaInterface.TYPE_DATE;
           //
@@ -5127,7 +5130,9 @@ public class ValueMetaBase implements ValueMetaInterface {
 
             // if the length or precision needs a BIGNUMBER
             if ( length > 15 || precision > 15 ) {
-              valtype = ValueMetaInterface.TYPE_BIGNUMBER;
+              // valtype = ValueMetaInterface.TYPE_BIGNUMBER;
+              precision = -1;
+              length = -1;
             }
           } else {
             if ( precision == 0 ) {
@@ -5140,7 +5145,9 @@ public class ValueMetaBase implements ValueMetaInterface {
               }
             } else { // we have a precision: keep NUMBER or change to BIGNUMBER?
               if ( length > 15 || precision > 15 ) {
-                valtype = ValueMetaInterface.TYPE_BIGNUMBER;
+                // valtype = ValueMetaInterface.TYPE_BIGNUMBER;
+                precision = -1;
+                length = -1;
               }
             }
           }

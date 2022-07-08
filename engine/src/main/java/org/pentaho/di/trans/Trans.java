@@ -5719,7 +5719,7 @@ public class Trans implements VariableSpace, NamedParams, HasLogChannelInterface
         try {
 
           if ( Trans.this.isFinished() ) {
-            log.logBasic( "Shutting down heartbeat signal for " + getName() );
+            log.logDebug( "Shutting down heartbeat signal for " + getName() );
             shutdownHeartbeat( Trans.this.heartbeat );
             return;
           }
