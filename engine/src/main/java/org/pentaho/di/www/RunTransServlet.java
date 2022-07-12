@@ -245,7 +245,7 @@ public class RunTransServlet extends BaseHttpServlet implements CartePluginInter
       // DO NOT disconnect from the shared repository connection when the job finishes.
       //
       String message = "Transformation '" + trans.getName() + "' was added to the list with id " + carteObjectId;
-      logBasic( message );
+      logDebug( message );
 
       try {
         // Execute the transformation...

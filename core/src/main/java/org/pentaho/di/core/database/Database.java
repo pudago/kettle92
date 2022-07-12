@@ -3576,9 +3576,11 @@ public class Database implements VariableSpace, LoggingObjectInterface, Closeabl
 
       }
     } catch ( Exception e ) {
+      /*
       DatabaseLogExceptionFactory.getExceptionStrategy( logTable, e )
         .registerException( log, e, PKG, "Database.Error.WriteLogTable",
           environmentSubstitute( logTable.getActualTableName() ) );
+      */
     }
   }
 

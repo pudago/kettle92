@@ -282,7 +282,7 @@ public class RunJobServlet extends BaseHttpServlet implements CartePluginInterfa
       } );
 
       String message = "Job '" + job.getJobname() + "' was added to the list with id " + carteObjectId;
-      logBasic( message );
+      logDebug( message );
 
       try {
         runJob( job );

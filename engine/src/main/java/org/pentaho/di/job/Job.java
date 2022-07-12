@@ -452,7 +452,7 @@ public class Job extends Thread implements VariableSpace, NamedParams, HasLogCha
       setStopped( false );
       KettleEnvironment.setExecutionInformation( this, rep );
 
-      log.logMinimal( BaseMessages.getString( PKG, "Job.Comment.JobStarted" ) );
+      log.logBasic( BaseMessages.getString( PKG, "Job.Comment.JobStarted" ) );
 
       ExtensionPointHandler.callExtensionPoint( log, KettleExtensionPoint.JobStart.id, this );
 
@@ -521,7 +521,7 @@ public class Job extends Thread implements VariableSpace, NamedParams, HasLogCha
       }
       // Save this result...
       jobTracker.addJobTracker( new JobTracker( jobMeta, jerEnd ) );
-      log.logMinimal( BaseMessages.getString( PKG, "Job.Comment.JobFinished" ) );
+      log.logBasic( BaseMessages.getString( PKG, "Job.Comment.JobFinished" ) );
 
       setActive( false );
       if ( !isStopped() ) {

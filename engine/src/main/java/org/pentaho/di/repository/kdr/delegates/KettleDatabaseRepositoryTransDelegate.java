@@ -990,7 +990,7 @@ public class KettleDatabaseRepositoryTransDelegate extends KettleDatabaseReposit
    */
   public synchronized void readDatabases( TransMeta transMeta, boolean overWriteShared ) throws KettleException {
     try {
-      for (DatabaseMeta databaseMeta : repository.loadTransDatabaseMetaList(transMeta.getObjectId())) {
+      for (DatabaseMeta databaseMeta : repository.loadDatabaseMetaList()) {
     		databaseMeta.shareVariablesWith( transMeta );
             DatabaseMeta check = transMeta.findDatabase( databaseMeta.getName() ); // Check if there already is one in the
                                                                                    // transformation

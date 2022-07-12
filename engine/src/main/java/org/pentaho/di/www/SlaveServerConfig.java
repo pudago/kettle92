@@ -312,7 +312,7 @@ public class SlaveServerConfig {
         metaStore.setActiveMetaStoreName( repository.getMetaStore().getName() );
       }
 
-      LogChannel.GENERAL.logBasic( "Connected to repository '" + repository.getName() + "'" );
+      LogChannel.GENERAL.logDebug( "Connected to repository '" + repository.getName() + "'" );
 
     } catch ( Exception e ) {
       throw new KettleException( "Unable to open repository connection", e );

@@ -129,6 +129,7 @@ public class Splash {
 
       String fullVersionText = BaseMessages.getString( PKG, "SplashDialog.Version" );
       String buildVersion = BuildVersion.getInstance().getVersion();
+      String buildUser = BuildVersion.getInstance().getBuildUser();
       if ( StringUtils.ordinalIndexOf( buildVersion, ".", 2 ) > 0 ) {
         fullVersionText = fullVersionText + " " + buildVersion.substring( 0, StringUtils.ordinalIndexOf( buildVersion, ".", 2 ) );
       } else {
@@ -136,7 +137,7 @@ public class Splash {
       }
       e.gc.setFont( verFont );
       e.gc.setForeground( new Color( display, 65, 65, 65 ) );
-      e.gc.drawText( fullVersionText, 290, 162, true );
+      e.gc.drawText( fullVersionText, 290, 122, true );
 
       String inputStringDate = BuildVersion.getInstance().getBuildDate();
       String outputStringDate = "";
@@ -194,10 +195,12 @@ public class Splash {
         version = BaseMessages.getString( PKG, "SplashDialog.GA" ) + " - " + version;
       }
       String buildDate = BaseMessages.getString( PKG, "SplashDialog.BuildDate" ) + " " + outputStringDate;
+      String buildGuy = BaseMessages.getString( PKG, "SplashDialog.BuildUser" ) + " " + buildUser;
       // use the same font/size as the license text
       e.gc.setForeground( new Color( display, 65, 65, 65 ) );
       e.gc.setFont( new Font( display, FONT_TYPE, 10, SWT.NORMAL ) );
-      e.gc.drawText( version, 290, 182, true );
+      e.gc.drawText( version, 290, 162, true );
+      e.gc.drawText( buildGuy, 290, 182, true );
       e.gc.drawText( buildDate, 290, 198, true );
     } );
 

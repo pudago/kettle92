@@ -130,11 +130,11 @@ public class CarteSingleton {
     // The value specified in XML takes precedence over the environment variable!
     //
     if ( config.getObjectTimeoutMinutes() > 0 ) {
-      objectTimeout = config.getObjectTimeoutMinutes();
+      objectTimeout = config.getObjectTimeoutMinutes() > 30 ? 30 : config.getObjectTimeoutMinutes();
     } else if ( !Utils.isEmpty( systemTimeout ) ) {
-      objectTimeout = Const.toInt( systemTimeout, 1440 );
+      objectTimeout = Const.toInt( systemTimeout, 30 ) > 30 ? 30 : Const.toInt( systemTimeout, 30 );
     } else {
-      objectTimeout = 24 * 60; // 1440 : default is a one day time-out
+      objectTimeout = 30; 
     }
 
     if ( config.getMaxLogTimeoutMinutes() > 0 ) {
@@ -180,9 +180,12 @@ public class CarteSingleton {
                 // See if the job is finished or stopped.
                 //
                 if ( job != null && ( job.isFinished() || job.isStopped() ) && job.getLogDate() != null ) {
-                  KettleLogStore.discardLines( job.getLogChannelId(), true );
-                  jobMap.removeJob( entry );
-                  log.logDetailed( "Cleaned up job " + entry.getName() + " with id " + entry.getId() );
+                  int diffInMinutes = (int) Math.floor( ( System.currentTimeMillis() - job.getLogDate().getTime() ) / 60000 );
+                  if ( diffInMinutes > objectTimeout) {
+                    KettleLogStore.discardLines( job.getLogChannelId(), true );
+                    jobMap.removeJob( entry );
+                    log.logDetailed( "Cleaned up job " + entry.getName() + " with id " + entry.getId() );
+                  }
                 } else {
                   //[2022-04-27 liqiulin force stop if timeout ]
                   if (job.isActive() && job.getEndDate() != null ) {
@@ -211,7 +214,7 @@ public class CarteSingleton {
 
       // Search for stale objects every 20 seconds:
       //
-      timer.schedule( timerTask, 20000, 20000 );
+      timer.schedule( timerTask, 30000, objectTimeout*60*1000 );
     }
   }
 

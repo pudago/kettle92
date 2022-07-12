@@ -225,6 +225,8 @@ public class WebServer {
     securityHandler.setConstraintMappings( new ConstraintMapping[] { constraintMapping } );
     */
 
+    ContextHandlerCollection contexts = new ContextHandlerCollection();
+
     FilterHolder holderNosniff = new FilterHolder(new HeaderFilter());
     holderNosniff.setInitParameter("headerConfig",  "set X-Content-Type-Options: nosniff");
     
@@ -238,17 +240,16 @@ public class WebServer {
 
     // Add all the servlets defined in kettle-servlets.xml ...
     //
-    ContextHandlerCollection contexts = new ContextHandlerCollection();
 
     // Root
-    /*
+    
     ServletContextHandler
         root =
         new ServletContextHandler( contexts, GetRootServlet.CONTEXT_PATH, ServletContextHandler.SESSIONS );
-    GetRootServlet rootServlet = new GetRootServlet();
-    rootServlet.setJettyMode( true );
-    root.addServlet( new ServletHolder( rootServlet ), "/*" );
-    */
+    // GetRootServlet rootServlet = new GetRootServlet();
+    // rootServlet.setJettyMode( true );
+    // root.addServlet( new ServletHolder( rootServlet ), "/*" );
+    
 
     PluginRegistry pluginRegistry = PluginRegistry.getInstance();
     List<PluginInterface> plugins = pluginRegistry.getPlugins( CartePluginType.class );
@@ -299,10 +300,12 @@ public class WebServer {
 
     // Allow png files to be shown for transformations and jobs...
     //
+    */
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setResourceBase( "temp" );
     // add all handlers/contexts to server
 
+    
     // set up static servlet
     ServletHolder staticHolder = new ServletHolder( "static", DefaultServlet.class );
     // resourceBase maps to the path relative to where carte is started
@@ -310,11 +313,15 @@ public class WebServer {
     staticHolder.setInitParameter( "dirAllowed", "true" );
     staticHolder.setInitParameter( "pathInfoOnly", "true" );
     root.addServlet( staticHolder, "/static/*" );
+    
 
     HandlerList handlers = new HandlerList();
     handlers.setHandlers( new Handler[] { resourceHandler, contexts } );
     securityHandler.setHandler( handlers );
-     */
+    
+
+    
+
     server.setHandler( securityHandler );
 
     // Start execution
@@ -413,7 +420,9 @@ public class WebServer {
         new SslConnectionFactory( sslContextFactory, HttpVersion.HTTP_1_1.asString() ),
         new HttpConnectionFactory( https ) );
     } else {
-      serverConnector = new ServerConnector( server, jettyAcceptors, -1 );
+      HttpConfiguration http = new HttpConfiguration();
+      http.setSendServerVersion(false);
+      serverConnector = new ServerConnector( server, jettyAcceptors, -1, new HttpConnectionFactory( http ) );
     }
 
     // Low resources options

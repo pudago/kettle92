@@ -764,7 +764,7 @@ public List<JobHopMeta> loadJobHopMetaList( ObjectId id_job, List<JobEntryCopy> 
    */
   public void readDatabases( JobMeta jobMeta, boolean overWriteShared ) throws KettleException {
     try {
-      for (DatabaseMeta databaseMeta : repository.loadJobDatabaseMetaList(jobMeta.getObjectId())) {
+      for (DatabaseMeta databaseMeta : repository.loadDatabaseMetaList()) {
     		databaseMeta.shareVariablesWith( jobMeta );
     		DatabaseMeta check = jobMeta.findDatabase( databaseMeta.getName() );
     		if ( check == null || overWriteShared ) {
