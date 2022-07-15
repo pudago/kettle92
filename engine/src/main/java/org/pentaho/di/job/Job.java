@@ -1161,7 +1161,7 @@ public class Job extends Thread implements VariableSpace, NamedParams, HasLogCha
    */
   protected void writeLogTableInformation( JobLogTable jobLogTable, LogStatus status ) throws KettleJobException,
     KettleDatabaseException {
-    boolean cleanLogRecords = status.equals( LogStatus.END );
+    // boolean cleanLogRecords = status.equals( LogStatus.END );
     String tableName = jobLogTable.getActualTableName();
     DatabaseMeta logcon = jobLogTable.getDatabaseMeta();
 
@@ -1172,9 +1172,9 @@ public class Job extends Thread implements VariableSpace, NamedParams, HasLogCha
       ldb.setCommit( logCommitSize );
       ldb.writeLogRecord( jobLogTable, status, this, null );
 
-      if ( cleanLogRecords ) {
-        ldb.cleanupLogRecords( jobLogTable, getJobname() );
-      }
+      // if ( cleanLogRecords ) {
+      //   ldb.cleanupLogRecords( jobLogTable, getJobname() );
+      // }
 
     } catch ( KettleDatabaseException dbe ) {
       addErrors( 1 );

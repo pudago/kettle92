@@ -2820,9 +2820,9 @@ public class Trans implements VariableSpace, NamedParams, HasLogChannelInterface
 
         // Also time-out the log records in here...
         //
-        if ( status.equals( LogStatus.END ) || status.equals( LogStatus.STOP ) ) {
-          ldb.cleanupLogRecords( transLogTable, getName() );
-        }
+        // if ( status.equals( LogStatus.END ) || status.equals( LogStatus.STOP ) ) {
+        //   ldb.cleanupLogRecords( transLogTable, getName() );
+        // }
 
         // Commit the operations to prevent locking issues
         //
