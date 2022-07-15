@@ -70,10 +70,10 @@ import org.pentaho.di.core.logging.LogChannelInterface;
 import org.pentaho.di.core.plugins.CartePluginType;
 import org.pentaho.di.core.plugins.PluginInterface;
 import org.pentaho.di.core.plugins.PluginRegistry;
+import org.pentaho.di.core.util.EnvUtil;
 import org.pentaho.di.core.util.Utils;
 import org.pentaho.di.i18n.BaseMessages;
 
-import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 public class WebServer {
 
@@ -408,13 +408,19 @@ public class WebServer {
     // Create the server with the configurated number of acceptors
     if ( sslConfig != null ) {
       log.logBasic( BaseMessages.getString( PKG, "WebServer.Log.SslModeUsing" ) );
-      SslContextFactory sslContextFactory = new SslContextFactory();
+      SslContextFactory sslContextFactory = new SslContextFactory.Server();
       sslContextFactory.setKeyStorePath( sslConfig.getKeyStore() );
       sslContextFactory.setKeyStorePassword( sslConfig.getKeyStorePassword() );
       sslContextFactory.setKeyManagerPassword( sslConfig.getKeyPassword() );
       sslContextFactory.setKeyStoreType( sslConfig.getKeyStoreType() );
 
+      String excludeCipherSuites = EnvUtil.getSystemProperty( Const.ADQ_SSL_EXCLUDED_CIPHER_SUITES, null );
+      if ( excludeCipherSuites != null ) {
+          sslContextFactory.addExcludeCipherSuites(excludeCipherSuites.split(","));
+      }
+
       HttpConfiguration https = new HttpConfiguration();
+      https.setSendServerVersion(false);
       https.addCustomizer( new SecureRequestCustomizer() );
       serverConnector = new ServerConnector( server, jettyAcceptors, -1,
         new SslConnectionFactory( sslContextFactory, HttpVersion.HTTP_1_1.asString() ),

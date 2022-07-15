@@ -84,6 +84,8 @@ import org.pentaho.support.encryption.Encr;
 public class Const {
   private static Class<?> PKG = Const.class; // for i18n purposes, needed by Translator2!!
 
+  public static final String ADQ_SSL_EXCLUDED_CIPHER_SUITES = "ADQ_SSL_EXCLUDED_CIPHER_SUITES";
+  
   /**
    * Version number
    *
