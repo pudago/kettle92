@@ -53,6 +53,8 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.server.session.DefaultSessionIdManager;
+import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -163,6 +165,12 @@ public class WebServer {
 
   public void startServer() throws Exception {
     server = new Server();
+
+    DefaultSessionIdManager session = new DefaultSessionIdManager(server);
+    HouseKeeper houseKeeper = new HouseKeeper();
+    houseKeeper.setIntervalSec(30);
+    session.setSessionHouseKeeper(houseKeeper);
+    server.setSessionIdManager(session);
 
     List<String> roles = new ArrayList<>();
     roles.add( Constraint.ANY_ROLE );
