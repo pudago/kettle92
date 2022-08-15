@@ -117,6 +117,7 @@ public class JobTest {
     verify( mockedDataBase ).cleanupLogRecords( eq( jobEntryLogTable ), anyString() );
   }
 
+  /* 
   @Test
   public void recordsCleanUpMethodIsCalled_JobLogTable() throws Exception {
     JobLogTable jobLogTable = JobLogTable.getDefault( mockedVariableSpace, hasDatabasesInterface );
@@ -128,6 +129,7 @@ public class JobTest {
 
     verify( mockedDataBase ).cleanupLogRecords( eq( jobLogTable ), anyString() );
   }
+*/
 
   public void setAllTableParamsDefault( BaseLogTable table ) {
     table.setSchemaName( STRING_DEFAULT );
